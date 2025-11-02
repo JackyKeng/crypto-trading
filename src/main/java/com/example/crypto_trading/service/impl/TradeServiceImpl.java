@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -64,5 +65,10 @@ public class TradeServiceImpl implements TradeService {
         // Insert into wallet balance
         walletBalanceRepository.save(usdtWalletBalance);
         walletBalanceRepository.save(assetWalletBalance);
+    }
+
+    @Override
+    public List<WalletBalance> fetchWalletBalance(Long userId) {
+        return walletBalanceRepository.findByUserId(userId).orElse(new ArrayList<>());
     }
 }

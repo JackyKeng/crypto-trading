@@ -9,10 +9,13 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 @Transactional
 public interface WalletBalanceRepository extends JpaRepository<WalletBalance, Long> {
+
+    Optional<List<WalletBalance>> findByUserId(Long userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(value = "SELECT wb FROM WalletBalance wb WHERE wb.userId = :userId AND wb.asset = :asset")
