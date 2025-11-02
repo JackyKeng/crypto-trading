@@ -2,9 +2,11 @@ package com.example.crypto_trading.service.impl;
 
 import com.example.crypto_trading.dto.TradeRequest;
 import com.example.crypto_trading.entity.TickerAggregatePrice;
+import com.example.crypto_trading.entity.TradeTransaction;
 import com.example.crypto_trading.entity.WalletBalance;
 import com.example.crypto_trading.enums.TradeActionEnum;
 import com.example.crypto_trading.enums.WalletAssetTypeEnum;
+import com.example.crypto_trading.repository.TradeTransactionRepository;
 import com.example.crypto_trading.repository.WalletBalanceRepository;
 import com.example.crypto_trading.service.PriceService;
 import com.example.crypto_trading.service.TradeService;
@@ -29,46 +31,62 @@ public class TradeServiceImpl implements TradeService {
     @Autowired
     private WalletBalanceRepository walletBalanceRepository;
 
+    @Autowired
+    private TradeTransactionRepository tradeTransactionRepository;
+
 
     @Override
     public void performTrades(Long userId, TradeRequest request) {
+        String symbol = request.getSymbol();
+        BigDecimal quantity = request.getQuantity();
+        TradeActionEnum tradeAction = request.getTradeAction();
+
         if (!cryptoSupportedList.contains(request.getSymbol())) {
             throw new IllegalArgumentException("Unsupported Symbol");
         }
 
+
         // Get latest price
-        TickerAggregatePrice tickerAggregatePrice = priceService.findLatestPrices(request.getSymbol());
+        TickerAggregatePrice tickerAggregatePrice = priceService.findLatestPrices(symbol);
         if (ObjectUtils.isEmpty(tickerAggregatePrice))
-            throw new IllegalStateException("No price found for " + request.getSymbol());
+            throw new IllegalStateException("No price found for " + symbol);
 
         // Check sufficient amount
-        BigDecimal price = TradeActionEnum.BUY.equals(request.getTradeAction()) ? tickerAggregatePrice.getBestAsk() : tickerAggregatePrice.getBestBid();
-        BigDecimal total = price.multiply(request.getQuantity());
+        BigDecimal price = TradeActionEnum.BUY.equals(tradeAction) ? tickerAggregatePrice.getBestAsk() : tickerAggregatePrice.getBestBid();
+        BigDecimal total = price.multiply(quantity);
         WalletBalance usdtWalletBalance = walletBalanceRepository.findByUserIdAndAssetForUpdate(userId, WalletAssetTypeEnum.USDT.name())
                 .orElseThrow(() -> new IllegalStateException("Missing USDT wallet"));
-        WalletBalance assetWalletBalance = walletBalanceRepository.findByUserIdAndAssetForUpdate(userId, request.getSymbol())
-                .orElseThrow(() -> new IllegalStateException("Missing " + request.getSymbol() + " wallet"));
+        WalletBalance assetWalletBalance = walletBalanceRepository.findByUserIdAndAssetForUpdate(userId, symbol)
+                .orElseThrow(() -> new IllegalStateException("Missing " + symbol + " wallet"));
 
-        if (TradeActionEnum.BUY.equals(request.getTradeAction())) {
+        if (TradeActionEnum.BUY.equals(tradeAction)) {
             if (usdtWalletBalance.getBalance().compareTo(total) < 0)
                 throw new IllegalArgumentException("Insufficient USDT balance");
             BigDecimal remainingBalance = usdtWalletBalance.getBalance().subtract(total);
             usdtWalletBalance.setBalance(remainingBalance);
-            assetWalletBalance.setBalance(assetWalletBalance.getBalance().add(request.getQuantity()));
+            assetWalletBalance.setBalance(assetWalletBalance.getBalance().add(quantity));
         } else {
-            if (assetWalletBalance.getBalance().compareTo(request.getQuantity()) < 0)
-                throw new IllegalArgumentException("Insufficient " + request.getSymbol() + " balance");
-            assetWalletBalance.setBalance(assetWalletBalance.getBalance().subtract(request.getQuantity()));
+            if (assetWalletBalance.getBalance().compareTo(quantity) < 0)
+                throw new IllegalArgumentException("Insufficient " + symbol + " balance");
+            assetWalletBalance.setBalance(assetWalletBalance.getBalance().subtract(quantity));
             usdtWalletBalance.setBalance(usdtWalletBalance.getBalance().add(total));
         }
 
         // Insert into wallet balance
         walletBalanceRepository.save(usdtWalletBalance);
         walletBalanceRepository.save(assetWalletBalance);
+
+        TradeTransaction tradeTransaction = new TradeTransaction(userId, symbol, tradeAction, price, quantity, total);
+        tradeTransactionRepository.save(tradeTransaction);
     }
 
     @Override
     public List<WalletBalance> fetchWalletBalance(Long userId) {
         return walletBalanceRepository.findByUserId(userId).orElse(new ArrayList<>());
+    }
+
+    @Override
+    public List<TradeTransaction> fetchTradeTransactions(Long userId) {
+        return tradeTransactionRepository.findByUserIdOrderByTransactionDateTimeDesc(userId).orElse(new ArrayList<>());
     }
 }

@@ -1,6 +1,7 @@
 package com.example.crypto_trading.controller;
 
 import com.example.crypto_trading.dto.TradeRequest;
+import com.example.crypto_trading.entity.TradeTransaction;
 import com.example.crypto_trading.entity.WalletBalance;
 import com.example.crypto_trading.service.TradeService;
 import jakarta.validation.Valid;
@@ -34,5 +35,13 @@ public class TradeController {
         if (userId == null) userId = 1L;
 
         return tradeService.fetchWalletBalance(userId);
+    }
+
+    @GetMapping("/history")
+    public List<TradeTransaction> fetchHistory(@RequestHeader(value = "x-user-id", required = false) Long userId) {
+        // Mock user id
+        if (userId == null) userId = 1L;
+
+        return tradeService.fetchTradeTransactions(userId);
     }
 }
