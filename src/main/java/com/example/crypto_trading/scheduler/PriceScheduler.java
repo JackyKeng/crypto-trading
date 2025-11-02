@@ -1,7 +1,9 @@
 package com.example.crypto_trading.scheduler;
 
+import com.example.crypto_trading.entity.TickerAggregatePrice;
 import com.example.crypto_trading.model.BinanceTradeData;
 import com.example.crypto_trading.model.HuobiTradeData;
+import com.example.crypto_trading.repository.TickerAggregatePriceRepository;
 import com.example.crypto_trading.service.impl.BinanceServiceImpl;
 import com.example.crypto_trading.service.impl.HuobiServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,9 @@ public class PriceScheduler {
 
     @Autowired
     private HuobiServiceImpl huobiService;
+
+    @Autowired
+    private TickerAggregatePriceRepository tickerAggregatePriceRepository;
 
     @Scheduled(fixedRateString = "${scheduler.price-poll-interval-ms}")
     public void fetchTickersBestPrice() throws JsonProcessingException {
@@ -63,6 +69,17 @@ public class PriceScheduler {
                     });
 
                 });
+
+        List<TickerAggregatePrice> priceList = new ArrayList<>();
+
+        for (Map.Entry<String, BigDecimal[]> entry : prices.entrySet()) {
+
+            String symbol = entry.getKey();
+            BigDecimal bid = entry.getValue()[0];
+            BigDecimal ask = entry.getValue()[1];
+            priceList.add(new TickerAggregatePrice(symbol, bid, ask));
+        }
+        tickerAggregatePriceRepository.saveAll(priceList);
 
         try {
             System.out.println(new ObjectMapper().writeValueAsString(prices));
