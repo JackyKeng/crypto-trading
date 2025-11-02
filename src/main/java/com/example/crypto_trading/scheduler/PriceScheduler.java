@@ -7,7 +7,6 @@ import com.example.crypto_trading.repository.TickerAggregatePriceRepository;
 import com.example.crypto_trading.service.impl.BinanceServiceImpl;
 import com.example.crypto_trading.service.impl.HuobiServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -42,9 +41,9 @@ public class PriceScheduler {
 
         // Only Save ETHUSDT and ETHUSDT into price list
         binanceTradeDataList.stream()
-                .filter(b -> cryptoSupportedList.contains(b.getSymbol()))
+                .filter(b -> cryptoSupportedList.contains(b.getSymbol().toUpperCase()))
                 .forEach(b -> {
-                    String symbol = b.getSymbol();
+                    String symbol = b.getSymbol().toUpperCase();
                     BigDecimal bid = b.getBidPrice();
                     BigDecimal ask = b.getAskPrice();
                     prices.put(symbol, new BigDecimal[]{bid, ask});
@@ -52,9 +51,9 @@ public class PriceScheduler {
 
         // Compare the best Bid and Ask with binance
         huobiTradeDataList.stream()
-                .filter(b -> cryptoSupportedList.contains(b.getSymbol()))
+                .filter(b -> cryptoSupportedList.contains(b.getSymbol().toUpperCase()))
                 .forEach(b -> {
-                    String symbol = b.getSymbol();
+                    String symbol = b.getSymbol().toUpperCase();
                     BigDecimal bid = b.getBid();
                     BigDecimal ask = b.getAsk();
 
@@ -80,11 +79,5 @@ public class PriceScheduler {
             priceList.add(new TickerAggregatePrice(symbol, bid, ask));
         }
         tickerAggregatePriceRepository.saveAll(priceList);
-
-        try {
-            System.out.println(new ObjectMapper().writeValueAsString(prices));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }

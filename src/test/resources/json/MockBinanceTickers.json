@@ -1,0 +1,30 @@
+[
+  {
+    "symbol": "ETHBTC",
+    "bidPrice": "0.03497000",
+    "bidQty": "24.41040000",
+    "askPrice": "0.03498000",
+    "askQty": "30.77170000"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "bidPrice": "110794.05000000",
+    "bidQty": "2.34299000",
+    "askPrice": "110794.06000000",
+    "askQty": "6.57648000"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "bidPrice": "3874.93000000",
+    "bidQty": "7.45560000",
+    "askPrice": "3874.94000000",
+    "askQty": "37.30040000"
+  },
+  {
+    "symbol": "HSRBTC",
+    "bidPrice": "0.00000000",
+    "bidQty": "0.00000000",
+    "askPrice": "0.00000000",
+    "askQty": "0.00000000"
+  }
+]

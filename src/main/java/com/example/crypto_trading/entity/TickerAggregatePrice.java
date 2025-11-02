@@ -26,6 +26,13 @@ public class TickerAggregatePrice {
     @JsonIgnore
     private LocalDateTime createdDate;
 
+    public TickerAggregatePrice(String symbol, BigDecimal bestBid, BigDecimal bestAsk, LocalDateTime createdDate) {
+        this.symbol = symbol;
+        this.bestBid = bestBid;
+        this.bestAsk = bestAsk;
+        this.createdDate = createdDate;
+    }
+
     public TickerAggregatePrice(String symbol, BigDecimal bestBid, BigDecimal bestAsk) {
         this.symbol = symbol;
         this.bestBid = bestBid;

@@ -23,4 +23,10 @@ public class WalletBalance {
 
     private String asset;
     private BigDecimal balance;
+
+    public WalletBalance(Long userId, String asset, BigDecimal balance) {
+        this.userId = userId;
+        this.asset = asset;
+        this.balance = balance;
+    }
 }
