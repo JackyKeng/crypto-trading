@@ -27,4 +27,9 @@ public class PriceServiceImpl implements PriceService {
         });
         return result;
     }
+
+    @Override
+    public TickerAggregatePrice findLatestPrices(String symbol) {
+        return tickerAggregatePriceRepository.findTopBySymbolOrderByCreatedDateDesc(symbol).orElse(null);
+    }
 }

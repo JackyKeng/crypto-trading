@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface PriceService {
     List<TickerAggregatePrice> findLatestPrices();
+
+    TickerAggregatePrice findLatestPrices(String symbol);
 }
